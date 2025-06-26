@@ -1,0 +1,200 @@
+SOLID Principles:
+
+-> Help us tackle most of the software problems.
+-> Helps to improve readability, flexibility and maintainability of the software 
+
+Refer blog https://medium.com/@javatechie/solid-design-principle-java-ae96a48db97
+
+
+Single Responsibility Principle:
+-> every java class must perform a single functionality. Implementation of multiple functionalities in a single class mashup the code.
+
+Refer https://github.com/Java-Techie-jt/solid-principles-example/tree/main/src/main/java/com/javatechie/solid/srp
+
+Earlier entire logic of sending OTP, various loan handling logic, print passbook service was part of BankService.java; So it is handling lot of functionalities. As per Single responsibility principle, 
+We have to segregate the logic into separate classes. So we have created NotificationService(dealing OTP), PrinterService and LoanService.
+
+
+Open Closed Principle:
+-> states that according to new requirements, the module should be ope for extension but closed for modification.
+
+As of now NotificationService code is like below:
+
+public class NotificationService {
+    public void sendOTP(String medium) {
+        if (medium.equals("email")) {
+            //write email related logic use JavaMailSenderAPI
+        }
+        if(medium.equals("mobile")){
+            //write logic using twillio API
+        }
+    }
+}
+
+As of now, the service is supporting notifications via email and mobile, what if we support WhatsApp mode also ? Then we have to make changes to this class. As per OCP, we should not make any modification to a 
+Class. So what we ca do is - we can create NotificationService as an interface/abstract class and then make EmailNotificationService, MobileNotificationService classes to implement this interface. Now if a new service like WhatsApp
+Has to be included, we will simply create WhatsappNotificationService and make it extend NotificationService interface.
+
+Refer https://github.com/Java-Techie-jt/solid-principles-example/tree/main/src/main/java/com/javatechie/solid/ocp
+
+
+Liskov’s Substitution Principle:
+-> It applies to inheritance in such a way that the derived classes must be completely substitutable for their base classes. If class A is a subtype of class B, then we should be able to replace B with A without interrupting
+The behaviour of the program.
+
+Refer https://github.com/Java-Techie-jt/solid-principles-example/blob/main/src/main/java/com/javatechie/solid/lsp
+
+Let we have an abstract class SocialMedia.java. This offers features like chatWithFriend(), publishPost() etc.
+There are several social media platforms like Instagram, WhatsApp etc. So these all will extend the SocialMedia.java and provide their own implementation.
+
+For example, If we check Whatsapp.java, it supports all the features mentioned by SocialMedia.java  except publishPost() feature. That means Whatsapp class cannot replace SocialMedia(parent) class. This is against the LSP. 
+
+Let’s understand how to address this issue. Refer https://github.com/Java-Techie-jt/solid-principles-example/tree/main/src/main/java/com/javatechie/solid/lsp/solution
+
+Lets create SocialMedia as an interface with common features like below:
+	public interface SocialMedia {
+    	    public   void chatWithFriend();
+    	    public   void sendPhotosAndVideos();
+	}	
+
+Then create separate interfaces for the services that are specific to some social media platforms. For example groupVideoCall() service is not supported by Instagram but supported by WhatsApp & Facebook.
+Lets create a separate interface like below:
+	public interface SocialVideoCallManager {
+    	      public void groupVideoCall(String... users);
+	}
+
+publishPost() functionality is not supported by WhatsApp where as this is supported by Facebook and Instagram. So lets create a separate interface for this functionality like below:
+	public interface PostMediaManager {
+   	     public  void publishPost(Object post);
+	}
+
+Now WhatsApp class will implement SocialMedia and SocialVideoCallManager interfaces but not PostMediaManager.  And this class can now substitute both parent interfaces. So now WhatsApp class is following LSP.
+
+
+Interface Segregation Principle:
+-> states the larger interfaces to be split into smaller ones. Because the implementation classes use only the methods that are required. We should not force the client to use the methods that they do not want to use.
+The goal of the ISP is similar to the SRP.
+
+Refer https://github.com/Java-Techie-jt/solid-principles-example/tree/main/src/main/java/com/javatechie/solid/lsp
+
+Let we have an UPIPayments interface with 3 abstract methods.
+
+	public interface UPIPayments {
+    	    public void payMoney();
+    	    public void getScratchCard();
+	    public void getCashBackAsCreditBalance();
+	}
+
+GooglePay is an UPIPayments platform that supports all the features. So we make GooglePay to implement UPIPayments interface. So is the case with Paytm. Paytm now implements UPIPayments interface. So 
+It has to provide implementation to all three methods. But Paytm does not support getCashBackAsCreditBalance() functionality. But now it is a child class of UPIPayments, Paytm is forced to provide implementation
+For this functionality even though it is not supporting that functionality. As per ISP, we should not force our clients to override some functionality.
+
+The solution is - lets create UPIPayments interface with common features like below:
+
+	public interface UPIPayments {
+    	    public void payMoney();
+    	    public void getScratchCard();
+	}
+
+Lets create another interface like below with getCashBackAsCreditBalance() functionality
+	public interface CashBackManager {
+   	    public void getCashBackAsCreditBalance();
+	}	
+
+Now GooglePay client will implement both interfaces whereas Paytm will implement only UPIPayments interface. This way we are following ISP.
+
+
+Dependency Inversion Principle:
+-> states that we must use abstraction instead of concrete implemntations. High-level modules should not depend on the low-level module but both should depend on the abstraction. 
+
+Refer https://github.com/Java-Techie-jt/solid-principles-example/tree/main/src/main/java/com/javatechie/solid/dip
+
+Let we have DebitCard.java & CreditCard.java classes with doTransaction() method. 
+
+public class DebitCard {
+    public void doTransaction(long amount){
+        System.out.println("payment using Debit card");
+    }
+}
+
+
+public class ShoppingMall {
+    private DebitCard debitCard;
+
+    public ShoppingMall(DebitCard debitCard) {
+        this.debitCard = debitCard;
+    }
+
+    public void doPurchaseSomething(long amount){
+        debitCard doTransaction(amount);
+    }
+
+    public static void main(String[] args) {
+        DebitCard debitCard=new DebitCard();
+        ShoppingMall shoppingMall=new ShoppingMall(debitCard);
+        shoppingMall.doPurchaseSomething(5000);
+    }
+}
+
+As of now, ShoppingMall is very tightly coupled to DebitCard. What if the user wants to use Credit card at ShoppingMall, then we have to replace DebitCard with CreditCard.
+Means to change a payment mode, we need to make lot of changes like below:
+
+
+public class ShoppingMall {
+    private CreditCard creditCard;
+
+    public ShoppingMall(CreditCard creditCard) {
+        this.creditCard = creditCard;
+    }
+
+    public void doPurchaseSomething(long amount){
+        debitCard doTransaction(amount);
+    }
+
+    public static void main(String[] args) {
+        CreditCard creditCard=new CreditCard();
+        ShoppingMall shoppingMall=new ShoppingMall(creditCard);
+        shoppingMall.doPurchaseSomething(5000);
+    }
+}
+
+That means ShoppingMall class here is very tightly coupled to one of the cards. This is not following DIP. To fix this, we need to have loose coupling between ShoppingMall and cards. For that, lets create 
+Below interface:
+
+public interface BankCard {
+    public void doTransaction(long amount);
+}
+
+
+Let’s make CreditCard.java & DebitCard.java to implement BankCard interface.
+
+
+Then instead of having tight coupling with a specific card, lets use this interface in ShoppingMall:
+
+public class ShoppingMall {
+    private BankCard bankCard;
+
+    public ShoppingMall(BankCard bankCard) {
+        this.bankCard = bankCard;
+    }
+
+    public void doPurchaseSomething(long amount){
+        bankCard.doTransaction(amount);
+    }
+
+    public static void main(String[] args) {
+       // DebitCard debitCard=new DebitCard();
+       // CreditCard creditCard=new CreditCard();
+
+        BankCard bankCard=new CreditCard();
+        ShoppingMall shoppingMall=new ShoppingMall(bankCard);
+        shoppingMall.doPurchaseSomething(5000);
+    }
+}
+
+
+
+
+
+
+
