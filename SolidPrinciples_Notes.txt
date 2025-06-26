@@ -1,5 +1,6 @@
 SOLID Principles:
 
+-> applicable to Object Oriented software
 -> Help us tackle most of the software problems.
 -> Helps to improve readability, flexibility and maintainability of the software 
 
